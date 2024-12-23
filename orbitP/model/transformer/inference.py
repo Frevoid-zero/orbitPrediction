@@ -34,6 +34,12 @@ savePmlPath = "../../../save/save_loss/"
 saveDir = "../../../save/"
 scalerPath ="../../../save/save_model/Scaler.joblib"
 
+def getL2(model):
+    l2_reg = 0
+    for param in model.parameters():
+        l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
+    return l2_reg
+
 def inference(test_dataloader, feature_size, k, path_to_save_model, scalerPath, modelName, device,lambda_l2 = 0.0001):
     if os.path.exists(savePmlPath+'pml_all.txt'):
         os.remove(savePmlPath + 'pml_all.txt')
@@ -61,10 +67,8 @@ def inference(test_dataloader, feature_size, k, path_to_save_model, scalerPath, 
             predList = pred
 
             loss = criterion(pred.squeeze(-1), target[:,:,0])
-            # l2_reg = 0
-            # for param in model.parameters():
-            #     l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
-            # loss = loss + lambda_l2*l2_reg
+            l2_reg = getL2(model)
+            loss = loss + lambda_l2*l2_reg
             test_bar.set_postfix({"loss": loss.detach().item()})
             test_loss += loss.detach().item()
             pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)
@@ -106,15 +110,10 @@ def inference_step(test_dataloader, feature_size, k, path_to_save_model, scalerP
             if len(predList) != 0:
                 src[-len(predList):, 0, 0] = predList
             pred = model(src, device)  # torch.Size([1xw, 1, 1])
-            # print(pred.size())
-            # print(predList.size())
-            # sys.exit(0)
             predList = torch.cat((predList,pred[-1:,0,0]), dim=0)
             loss = criterion(pred[-1,:,0], target[-1:,:,0])
-            # l2_reg = 0
-            # for param in model.parameters():
-            #     l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
-            # loss = loss + lambda_l2*l2_reg
+            l2_reg = getL2(model)
+            loss = loss + lambda_l2*l2_reg
             test_bar.set_postfix({"loss": loss.detach().item()})
             test_loss += loss.detach().item()
             pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)

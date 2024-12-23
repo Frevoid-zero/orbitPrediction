@@ -14,6 +14,12 @@ scalerPath ="../../save/save_model/Scaler.joblib"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s %(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
 logger = logging.getLogger(__name__)
 
+def getL2(model):
+    l2_reg = 0
+    for param in model.parameters():
+        l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
+    return l2_reg
+
 def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
 
     device = torch.device(device)
@@ -36,10 +42,8 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
             target = torch.cat((orbitData_pre.permute(1,0,2)[1:,:,:],orbitData_suf.permute(1,0,2)),dim=0).float().to(device)
             pred= model(src, device) # torch.Size([1xw, 1, 1])
             loss = criterion(pred.squeeze(-1),target[:,:,0])
-            # l2_reg = 0
-            # for param in model.parameters():
-            #     l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
-            # loss = loss + lambda_l2*l2_reg
+            l2_reg = getL2(model)
+            loss = loss + lambda_l2*l2_reg
             loss.backward()
             optimizer.step()
 
@@ -65,10 +69,8 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
                 predList = pred
 
                 loss = criterion(pred.squeeze(-1),target[:,:,0])
-                # l2_reg = 0
-                # for param in model.parameters():
-                #     l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
-                # loss = loss + lambda_l2*l2_reg
+                l2_reg = getL2(model)
+                loss = loss + lambda_l2 * l2_reg
                 test_bar.set_postfix({"loss": loss.detach().item()})
                 test_loss += loss.detach().item()
 

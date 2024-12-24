@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 torch.manual_seed(0)
 
 axis = 0
-training_length = 1440
-predicting_length = 1440
+training_length = 2880
+predicting_length = 2880
 forecast_window = 1
-modelName = "train_50.pth"
+modelName = "train_35.pth"
 
 # dataSGP4Dir = "../../../dataset/dataSGP4/"
 # dataPOEORBDir = "../../../dataset/dataPOEORB/"
@@ -48,11 +48,11 @@ def getL2(model):
         l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
     return l2_reg
 
-def inference(test_dataloader, feature_size, k, path_to_save_model, scalerPath, modelName, device,lambda_l2 = 0.0001):
+def inference(test_dataloader, feature_size, k,num_layers,dropout, path_to_save_model, scalerPath, modelName, device,lambda_l2 = 0.0001):
     if os.path.exists(savePmlPath+'pml_all.txt'):
         os.remove(savePmlPath + 'pml_all.txt')
     device = torch.device(device)
-    model = Transformer(feature_size=feature_size,k=k,num_layers=5,dropout=0.1).float().to(device)
+    model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
     model.load_state_dict(torch.load(path_to_save_model+modelName))
     criterion = WeightedMSELoss()
     scaler = load(scalerPath)
@@ -66,7 +66,6 @@ def inference(test_dataloader, feature_size, k, path_to_save_model, scalerPath, 
             # Desired input for model: [input_length, batch, feature]
             test_bar.set_description(f"inference")
             src = orbitData_pre.permute(1, 0, 2)[:, :, :-2].float().to(device)  # torch.Size([288, 4, 5])
-
             target = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float().to(device)
 
             if len(predList) != 0:
@@ -94,12 +93,13 @@ def inference(test_dataloader, feature_size, k, path_to_save_model, scalerPath, 
         plot_error(saveDir,src_error[:,0],pred_error[:,0],"error_all")
 
 
-def inference_step(test_dataloader, feature_size, k, path_to_save_model, scalerPath, modelName, device,lambda_l2 = 0.0001):
+def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_save_model, scalerPath, modelName, device,lambda_l2 = 0.0001):
     if os.path.exists(savePmlPath+'pml_step.txt'):
         os.remove(savePmlPath + 'pml_step.txt')
     device = torch.device(device)
-    model = Transformer(feature_size=feature_size,k=k,num_layers=5,dropout=0.1).float().to(device)
+    model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
     model.load_state_dict(torch.load(path_to_save_model+modelName))
+
     criterion = WeightedMSELoss()
     scaler = load(scalerPath)
     test_loss = 0
@@ -144,6 +144,8 @@ if __name__ == "__main__":
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
+    parser.add_argument("--num_layers", type=int, default=3)
+    parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)
     parser.add_argument("--path_to_save_model",type=str,default=saveDir+"save_model/")
     parser.add_argument("--path_to_save_loss",type=str,default=saveDir+"save_loss/")
@@ -156,14 +158,14 @@ if __name__ == "__main__":
     else:
         # 使用 CPU 设备
         device = "cpu"
-
+    # 加载scaler
+    scaler = joblib.load(scalerPath)
     # orbitData_SGP4 = get_orbitData_SGP4(dataSGP4Dir,dataPOEORBDir)
     orbitData_Orekit = get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir)
     orbitData = orbitData_Orekit
     orbitData = np.array(orbitData)
 
-    # 加载scaler
-    scaler = joblib.load(scalerPath)
+
     orbitData[:, :, axis] = scaler.transform(orbitData[:, :, axis])
     orbitData_train = orbitData[:-predicting_length]
     orbitData_test = orbitData[-predicting_length-predicting_length:]
@@ -171,5 +173,5 @@ if __name__ == "__main__":
     test_dataset = orbitPDataset(data= orbitData_test, axis= axis, training_length = training_length, forecast_window = forecast_window)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    # inference(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
-    inference_step(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
+    inference(test_dataloader,args.feature_size,args.k,args.num_layer,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
+    inference_step(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)

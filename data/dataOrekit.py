@@ -23,7 +23,7 @@ setup_orekit_curdir("../orekit-data-master")  # 替换为你的 orekit 数据路
 tle1 = ""
 tle2 = ""
 beginDate = datetime.strptime("2024-01-01","%Y-%m-%d")
-endDate = datetime.strptime("2024-02-01","%Y-%m-%d")
+endDate = datetime.strptime("2024-01-05","%Y-%m-%d")
 dataLastTLEPath = "../dataset/dataLastTLE.txt"
 dataPOEORBDir = "../dataset/dataPOEORB"
 dataOrekitDir = "../dataset/dataOrekit/"
@@ -148,10 +148,10 @@ if __name__ == "__main__":
         with open(writePath, "w", encoding="utf-8") as writeFile:
             with open(filePath, "r", encoding="utf-8") as file:
                 lines = file.readlines()
-
                 t_bar = tqdm(range(0, len(lines), 3), desc=fileName, total=len(range(0, len(lines), 3)))
                 for i in t_bar:
                     time_utc = lines[i].strip().replace("UTC=", "")
+                    dateTime = datetime.strptime(time_utc, "%Y-%m-%dT%H:%M:%S.%f")
                     time_utc_pre = datetime.strptime(time_utc, "%Y-%m-%dT%H:%M:%S.%f") - timedelta(
                         days=1)  # 使用前一天最晚的TLE预测
                     nowTLE = dataDict[time_utc_pre.date().strftime("%Y-%m-%d")]

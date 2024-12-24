@@ -16,4 +16,20 @@ class WeightedMSELoss(nn.Module):
         return self.weight * loss  # 返回加权的 MSE 损失
 
 if __name__ == "__main__":
-    pass
+    criterion = WeightedMSELoss(1)
+    pred = torch.zeros((3,4,1))
+    target = torch.zeros((3,4,8))
+    for i in range(4):
+        for j in range(3):
+            pred[j][i][0] = j
+    for i in range(4):
+        for j in range(3):
+            target[j][i][0] = i
+    sum = 0
+    for i in range(4):
+        for j in range(3):
+            sum += (pred[j][i][0]-target[j][i][0])*(pred[j][i][0]-target[j][i][0])
+    sum/=12
+    print(sum)
+    loss = criterion(pred.squeeze(-1), target[:, :, 0])
+    print(loss)

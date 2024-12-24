@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 with open(writePath, 'a') as file:
                     for msg in data:
                         time_utc = datetime.strptime(msg['UTC'], time_format)
-                        if time_utc.second!=2:
+                        if time_utc.second%30 != 2:
                             continue
                         file.write(f"{msg['UTC']}\n")
                         file.write(f"{msg['X']} {msg['Y']} {msg['Z']}\n")
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 with open(writePath, 'w') as file:
                     for msg in data:
                         time_utc = datetime.strptime(msg['UTC'], time_format)
-                        if time_utc.second!=2:
+                        if time_utc.second%30 != 2:
                             continue
                         file.write(f"{msg['UTC']}\n")
                         file.write(f"{msg['X']} {msg['Y']} {msg['Z']}\n")

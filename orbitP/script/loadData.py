@@ -96,7 +96,7 @@ def get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir):
 
 
 if __name__ == "__main__":
-    orbitData_SGP4 = get_orbitData_SGP4(dataSGP4Dir,dataPOEORBDir)
+    # orbitData_SGP4 = get_orbitData_SGP4(dataSGP4Dir,dataPOEORBDir)
     orbitData_Orekit = get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir)
-    print(orbitData_SGP4.shape)
+    # print(orbitData_SGP4.shape)
     print(orbitData_Orekit.shape)

@@ -25,9 +25,15 @@ print('torch.cuda.is_available=' + str(torch.cuda.is_available()))
 torch.set_default_tensor_type(torch.FloatTensor)
 
 axis = 0
-training_length = 1440
-predicting_length = 1440
+training_length = 2880
+predicting_length = 2880
 forecast_window = 1
+
+# dataSGP4Dir = "../../dataset/dataSGP4/"
+# dataPOEORBDir = "../../dataset/dataPOEORB/"
+# dataOrekitDir = "../../dataset/dataOrekit/"
+# saveDir = "../../save/"
+
 dataSGP4Dir = "./dataset/dataSGP4/"
 dataPOEORBDir = "./dataset/dataPOEORB/"
 dataOrekitDir = "./dataset/dataOrekit/"
@@ -39,6 +45,8 @@ def main( epoch: int = 1000,
     batch_size: int = 64,
     frequency: int = 100,
     lambda_l2: float = 0.01,
+    num_layers: int = 3,
+    dropout: float = 0.1,
     training_length = 8640,
     forecast_window = 1,
     path_to_save_dir = "../../save/",
@@ -64,17 +72,19 @@ def main( epoch: int = 1000,
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataset = orbitPDataset(data= orbitData_test, axis= axis, training_length = training_length, forecast_window = forecast_window)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-    model = transformer(train_dataloader, test_dataloader, epoch, feature_size, k, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device)
+    model = transformer(train_dataloader, test_dataloader, epoch, feature_size, k,num_layers,dropout, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device)
 
     # inference(path_to_save_predictions, forecast_window, test_dataloader, device, path_to_save_model, model)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", type=int, default=35)
+    parser.add_argument("--epoch", type=int, default=2)
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
+    parser.add_argument("--num_layers", type=int, default=3)
+    parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)
     parser.add_argument("--path_to_save_model",type=str,default=saveDir+"save_model/")
@@ -97,6 +107,8 @@ main(
     batch_size=args.batch_size,
     frequency=args.frequency,
     lambda_l2=args.lambda_l2,
+    num_layers=args.num_layers,
+    dropout=args.dropout,
     training_length=training_length,
     forecast_window=forecast_window,
     path_to_save_dir=args.path_to_save_dir,

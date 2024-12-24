@@ -10,7 +10,6 @@ from tqdm import tqdm
 from orbitP.model.transformer.util import *
 from joblib import load
 
-scalerPath ="./save/save_model/Scaler.joblib"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s %(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
 logger = logging.getLogger(__name__)
 
@@ -20,17 +19,16 @@ def getL2(model):
         l2_reg += torch.norm(param, p=2) ** 2  # L2 范数的平方
     return l2_reg
 
-def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
+def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k,num_layer,dropout, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
 
     device = torch.device(device)
-    model = Transformer(feature_size=feature_size,k=k,num_layers=5,dropout=0.1).float().to(device)
+    model = Transformer(feature_size=feature_size,k=k,num_layers=num_layer,dropout=dropout).float().to(device)
     optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
     criterion = WeightedMSELoss(1)
-    scaler = load(scalerPath)
+    model.train()
     for epoch in range(EPOCH):
         train_loss = 0
         test_loss = 0
-        model.train()
         train_bar = tqdm(train_dataloader,total=len(train_dataloader))
         for idx_pre, idx_suf, orbitData_pre, orbitData_suf, training_length, forecast_window in train_bar:
             # Shape of _input : [batch, input_length, feature]
@@ -80,7 +78,7 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
 
         if(epoch+1)%5==0:
             if not os.path.exists(path_to_save_model+ f"train_{epoch+1}/"):
-                os.makedirs(path_to_save_model)
+                os.makedirs(path_to_save_model+ f"train_{epoch+1}/")
             torch.save(model.state_dict(), path_to_save_model+ f"train_{epoch+1}/" + f"train_{epoch+1}.pth")
             torch.save(optimizer.state_dict(), path_to_save_model+ f"train_{epoch+1}/" + f"optimizer_{epoch+1}.pth")
 

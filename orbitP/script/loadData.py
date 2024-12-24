@@ -19,6 +19,7 @@ def get_file_paths(directory):
         for file in files:
             file_path = os.path.join(root, file)
             file_paths.append(os.path.normpath(file_path))
+    file_paths = sorted(file_paths)
     return file_paths
 
 

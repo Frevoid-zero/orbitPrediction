@@ -23,9 +23,8 @@ def getL2(model):
 def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequency, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
 
     device = torch.device(device)
-
-    model = Transformer(feature_size=feature_size,k=k,num_layers=3,dropout=0).float().to(device)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.0001)
+    model = Transformer(feature_size=feature_size,k=k,num_layers=5,dropout=0.1).float().to(device)
+    optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
     criterion = WeightedMSELoss(1)
     scaler = load(scalerPath)
     for epoch in range(EPOCH):
@@ -42,8 +41,8 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
             target = torch.cat((orbitData_pre.permute(1,0,2)[1:,:,:],orbitData_suf.permute(1,0,2)),dim=0).float().to(device)
             pred= model(src, device) # torch.Size([1xw, 1, 1])
             loss = criterion(pred.squeeze(-1),target[:,:,0])
-            l2_reg = getL2(model)
-            loss = loss + lambda_l2*l2_reg
+            # l2_reg = getL2(model)
+            # loss = loss + lambda_l2*l2_reg
             loss.backward()
             optimizer.step()
 
@@ -74,10 +73,16 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
         #         test_bar.set_postfix({"loss": loss.detach().item()})
         #         test_loss += loss.detach().item()
         #
-        # train_loss /= len(train_dataloader)
+        train_loss /= len(train_dataloader)
         # test_loss /= len(test_dataloader)
-        # log_loss(epoch,train_loss, path_to_save_loss, train=True)
+        log_loss(epoch,train_loss, path_to_save_loss, train=True)
         # log_loss(epoch,test_loss, path_to_save_loss, train=False)
+
+        if(epoch+1)%5==0:
+            if not os.path.exists(path_to_save_model+ f"train_{epoch+1}/"):
+                os.makedirs(path_to_save_model)
+            torch.save(model.state_dict(), path_to_save_model+ f"train_{epoch+1}/" + f"train_{epoch+1}.pth")
+            torch.save(optimizer.state_dict(), path_to_save_model+ f"train_{epoch+1}/" + f"optimizer_{epoch+1}.pth")
 
     if not os.path.exists(path_to_save_model):
         os.makedirs(path_to_save_model)

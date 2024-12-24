@@ -23,7 +23,7 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k,num_la
 
     device = torch.device(device)
     model = Transformer(feature_size=feature_size,k=k,num_layers=num_layer,dropout=dropout).float().to(device)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(),lr=0.005)
     criterion = WeightedMSELoss(1)
     model.train()
     for epoch in range(EPOCH):

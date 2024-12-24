@@ -26,7 +26,7 @@ axis = 0
 training_length = 2880
 predicting_length = 2880
 forecast_window = 1
-modelName = "train_35.pth"
+modelName = "train_30.pth"
 
 # dataSGP4Dir = "../../../dataset/dataSGP4/"
 # dataPOEORBDir = "../../../dataset/dataPOEORB/"
@@ -66,7 +66,8 @@ def inference(test_dataloader, feature_size, k,num_layers,dropout, path_to_save_
             # Desired input for model: [input_length, batch, feature]
             test_bar.set_description(f"inference")
             src = orbitData_pre.permute(1, 0, 2)[:, :, :-2].float().to(device)  # torch.Size([288, 4, 5])
-            target = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float().to(device)
+            tmp = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float()
+            target = tmp.to(device)
 
             if len(predList) != 0:
                 src[:, :, 0] = predList.squeeze(-1)
@@ -81,7 +82,7 @@ def inference(test_dataloader, feature_size, k,num_layers,dropout, path_to_save_
             pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)
             pred_error[:, 0] = predList.squeeze().cpu()
             pred_error = scaler.inverse_transform(pred_error)  # (288,7)
-            src_error = scaler.inverse_transform(orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2))  # (288,7)
+            src_error = scaler.inverse_transform(tmp[-predicting_length:, :, :].squeeze(-2))  # (288,7)
 
             pml = Pml(src_error[:, 0],pred_error[:, 0])
             with open(savePmlPath+"pml_all.txt", "a") as f:
@@ -106,14 +107,14 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
     model.eval()
     with torch.no_grad():
         predList = torch.tensor(np.array([])).float().to(device)
-        test_bar = tqdm(test_dataloader, total=len(test_dataloader),position=0 ,leave=True)
+        test_bar = tqdm(test_dataloader, total=len(test_dataloader))
         for idx, (idx_pre, idx_suf, orbitData_pre, orbitData_suf, training_length, forecast_window) in enumerate(tqdm(test_bar)):
             # Shape of _input : [batch, input_length, feature]
             # Desired input for model: [input_length, batch, feature]
             test_bar.set_description(f"inference")
             src = orbitData_pre.permute(1, 0, 2)[:, :, :-2].float().to(device)  # torch.Size([288, 4, 5])
-
-            target = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float().to(device)
+            tmp = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float()
+            target = tmp.to(device)
 
             if len(predList) != 0:
                 src[-len(predList):, 0, 0] = predList
@@ -127,7 +128,7 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
             pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)
             pred_error[-len(predList):, 0] = predList.cpu()
             pred_error = scaler.inverse_transform(pred_error)  # (288,7)
-            src_error = scaler.inverse_transform(orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2))  # (288,7)
+            src_error = scaler.inverse_transform(tmp[-predicting_length:, :, :].squeeze(-2))  # (288,7)
 
             pml = Pml(src_error[:, 0],pred_error[:, 0])
             with open(savePmlPath+"pml_step.txt", "a") as f:
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
-    parser.add_argument("--num_layers", type=int, default=3)
+    parser.add_argument("--num_layers", type=int, default=5)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)
     parser.add_argument("--path_to_save_model",type=str,default=saveDir+"save_model/")
@@ -173,5 +174,5 @@ if __name__ == "__main__":
     test_dataset = orbitPDataset(data= orbitData_test, axis= axis, training_length = training_length, forecast_window = forecast_window)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    inference(test_dataloader,args.feature_size,args.k,args.num_layer,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
+    inference(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
     inference_step(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)

@@ -23,7 +23,7 @@ setup_orekit_curdir("../orekit-data-master")  # 替换为你的 orekit 数据路
 tle1 = ""
 tle2 = ""
 beginDate = datetime.strptime("2024-01-01","%Y-%m-%d")
-endDate = datetime.strptime("2024-01-08","%Y-%m-%d")
+endDate = datetime.strptime("2024-02-01","%Y-%m-%d")
 dataLastTLEPath = "../dataset/dataLastTLE.txt"
 dataPOEORBDir = "../dataset/dataPOEORB"
 dataOrekitDir = "../dataset/dataOrekit/"

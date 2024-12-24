@@ -73,6 +73,7 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--lambda_l2", type=float, default=0.000001)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--path_to_save_dir", type=str, default="../../save/")
     parser.add_argument("--path_to_save_model",type=str,default="../../save/save_model/")
@@ -94,7 +95,7 @@ main(
     feature_size=args.feature_size,
     batch_size=args.batch_size,
     frequency=args.frequency,
-    lambda_l2=0.01,
+    lambda_l2=args.lambda_l2,
     training_length=training_length,
     forecast_window=forecast_window,
     path_to_save_dir=args.path_to_save_dir,

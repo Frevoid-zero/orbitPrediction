@@ -135,6 +135,7 @@ if __name__ == "__main__":
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--frequency", type=int, default=100)
+    parser.add_argument("--lambda_l2", type=float, default=0.000001)
     parser.add_argument("--path_to_save_dir", type=str, default="../../../save/")
     parser.add_argument("--path_to_save_model",type=str,default="../../../save/save_model/")
     parser.add_argument("--path_to_save_loss",type=str,default="../../../save/save_loss/")
@@ -162,5 +163,5 @@ if __name__ == "__main__":
     test_dataset = orbitPDataset(data= orbitData_test, axis= axis, training_length = training_length, forecast_window = forecast_window)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    inference(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device)
-    inference_step(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device)
+    inference(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
+    inference_step(test_dataloader,args.feature_size,args.k,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)

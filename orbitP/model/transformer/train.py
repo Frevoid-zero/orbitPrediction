@@ -51,33 +51,33 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k, frequ
             train_loss += loss.detach().item()
 
 
-        model.eval()
-        with torch.no_grad():
-            predList = torch.tensor(np.array([]))
-            test_bar = tqdm(test_dataloader,total=len(test_dataloader))
-            for idx_pre, idx_suf, orbitData_pre, orbitData_suf, training_length, forecast_window in test_bar:
-                # Shape of _input : [batch, input_length, feature]
-                # Desired input for model: [input_length, batch, feature]
-                test_bar.set_description(f"test{epoch+1}")
-                src = orbitData_pre.permute(1,0,2)[:,:,:-2].float().to(device) # torch.Size([288, 4, 6])
-
-                target = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float().to(device)
-
-                if len(predList)!=0:
-                    src[:,:,0]=predList.squeeze(-1)
-                pred = model(src, device)  # torch.Size([1xw, 1, 1])
-                predList = pred
-
-                loss = criterion(pred.squeeze(-1),target[:,:,0])
-                l2_reg = getL2(model)
-                loss = loss + lambda_l2 * l2_reg
-                test_bar.set_postfix({"loss": loss.detach().item()})
-                test_loss += loss.detach().item()
-
-        train_loss /= len(train_dataloader)
-        test_loss /= len(test_dataloader)
-        log_loss(epoch,train_loss, path_to_save_loss, train=True)
-        log_loss(epoch,test_loss, path_to_save_loss, train=False)
+        # model.eval()
+        # with torch.no_grad():
+        #     predList = torch.tensor(np.array([]))
+        #     test_bar = tqdm(test_dataloader,total=len(test_dataloader))
+        #     for idx_pre, idx_suf, orbitData_pre, orbitData_suf, training_length, forecast_window in test_bar:
+        #         # Shape of _input : [batch, input_length, feature]
+        #         # Desired input for model: [input_length, batch, feature]
+        #         test_bar.set_description(f"test{epoch+1}")
+        #         src = orbitData_pre.permute(1,0,2)[:,:,:-2].float().to(device) # torch.Size([288, 4, 6])
+        #
+        #         target = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float().to(device)
+        #
+        #         if len(predList)!=0:
+        #             src[:,:,0]=predList.squeeze(-1)
+        #         pred = model(src, device)  # torch.Size([1xw, 1, 1])
+        #         predList = pred
+        #
+        #         loss = criterion(pred.squeeze(-1),target[:,:,0])
+        #         l2_reg = getL2(model)
+        #         loss = loss + lambda_l2 * l2_reg
+        #         test_bar.set_postfix({"loss": loss.detach().item()})
+        #         test_loss += loss.detach().item()
+        #
+        # train_loss /= len(train_dataloader)
+        # test_loss /= len(test_dataloader)
+        # log_loss(epoch,train_loss, path_to_save_loss, train=True)
+        # log_loss(epoch,test_loss, path_to_save_loss, train=False)
 
     if not os.path.exists(path_to_save_model):
         os.makedirs(path_to_save_model)

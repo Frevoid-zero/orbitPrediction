@@ -10,7 +10,7 @@ from tqdm import tqdm
 from orbitP.model.transformer.util import *
 from joblib import load
 
-scalerPath ="../../save/save_model/Scaler.joblib"
+scalerPath ="./save/save_model/Scaler.joblib"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s %(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
 logger = logging.getLogger(__name__)
 

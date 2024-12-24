@@ -27,12 +27,19 @@ training_length = 1440
 predicting_length = 1440
 forecast_window = 1
 modelName = "train_20.pth"
-dataSGP4Dir = "../../../dataset/dataSGP4/"
-dataPOEORBDir = "../../../dataset/dataPOEORB/"
-dataOrekitDir = "../../../dataset/dataOrekit/"
-savePmlPath = "../../../save/save_loss/"
-saveDir = "../../../save/"
-scalerPath ="../../../save/save_model/Scaler.joblib"
+# dataSGP4Dir = "../../../dataset/dataSGP4/"
+# dataPOEORBDir = "../../../dataset/dataPOEORB/"
+# dataOrekitDir = "../../../dataset/dataOrekit/"
+# savePmlPath = "../../../save/save_loss/"
+# saveDir = "../../../save/"
+# scalerPath ="../../../save/save_model/Scaler.joblib"
+
+dataSGP4Dir = "./dataset/dataSGP4/"
+dataPOEORBDir = "./dataset/dataPOEORB/"
+dataOrekitDir = "./dataset/dataOrekit/"
+savePmlPath = "./save/save_loss/"
+saveDir = "./save/"
+scalerPath ="./save/save_model/Scaler.joblib"
 
 def getL2(model):
     l2_reg = 0
@@ -136,10 +143,10 @@ if __name__ == "__main__":
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
-    parser.add_argument("--path_to_save_dir", type=str, default="../../../save/")
-    parser.add_argument("--path_to_save_model",type=str,default="../../../save/save_model/")
-    parser.add_argument("--path_to_save_loss",type=str,default="../../../save/save_loss/")
-    parser.add_argument("--path_to_save_predictions",type=str,default=".../../../save/save_predictions/")
+    parser.add_argument("--path_to_save_dir", type=str, default="./save/")
+    parser.add_argument("--path_to_save_model",type=str,default="./save/save_model/")
+    parser.add_argument("--path_to_save_loss",type=str,default="./save/save_loss/")
+    parser.add_argument("--path_to_save_predictions",type=str,default="./save/save_predictions/")
     args = parser.parse_args()
     scalerPath = args.path_to_save_model + "Scaler.joblib"
     if torch.cuda.is_available():

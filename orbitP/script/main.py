@@ -28,9 +28,9 @@ axis = 0
 training_length = 1440
 predicting_length = 1440
 forecast_window = 1
-dataSGP4Dir = "../../dataset/dataSGP4/"
-dataPOEORBDir = "../../dataset/dataPOEORB/"
-dataOrekitDir = "../../dataset/dataOrekit/"
+dataSGP4Dir = "./dataset/dataSGP4/"
+dataPOEORBDir = "./dataset/dataPOEORB/"
+dataOrekitDir = "./dataset/dataOrekit/"
 
 def main( epoch: int = 1000,
     k: int = 3,
@@ -69,16 +69,16 @@ def main( epoch: int = 1000,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", type=int, default=20)
+    parser.add_argument("--epoch", type=int, default=50)
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
-    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
     parser.add_argument("--frequency", type=int, default=100)
-    parser.add_argument("--path_to_save_dir", type=str, default="../../save/")
-    parser.add_argument("--path_to_save_model",type=str,default="../../save/save_model/")
-    parser.add_argument("--path_to_save_loss",type=str,default="../../save/save_loss/")
-    parser.add_argument("--path_to_save_predictions",type=str,default="../../save/save_predictions/")
+    parser.add_argument("--path_to_save_dir", type=str, default="./save/")
+    parser.add_argument("--path_to_save_model",type=str,default="./save/save_model/")
+    parser.add_argument("--path_to_save_loss",type=str,default="./save/save_loss/")
+    parser.add_argument("--path_to_save_predictions",type=str,default="./save/save_predictions/")
     args = parser.parse_args()
 
     if torch.cuda.is_available():

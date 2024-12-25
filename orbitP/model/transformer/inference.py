@@ -26,21 +26,21 @@ axis = 0
 training_length = 2880
 predicting_length = 2880
 forecast_window = 1
-modelName = "train_30.pth"
+modelName = "train_50.pth"
 
-# dataSGP4Dir = "../../../dataset/dataSGP4/"
-# dataPOEORBDir = "../../../dataset/dataPOEORB/"
-# dataOrekitDir = "../../../dataset/dataOrekit/"
-# savePmlPath = "../../../save/save_loss/"
-# saveDir = "../../../save/"
-# scalerPath ="../../../save/save_model/Scaler.joblib"
+dataSGP4Dir = "../../../dataset/dataSGP4/"
+dataPOEORBDir = "../../../dataset/dataPOEORB/"
+dataOrekitDir = "../../../dataset/dataOrekit/"
+savePmlPath = "../../../save/save_loss/"
+saveDir = "../../../save/"
+scalerPath ="../../../save/save_model/Scaler.joblib"
 
-dataSGP4Dir = "./dataset/dataSGP4/"
-dataPOEORBDir = "./dataset/dataPOEORB/"
-dataOrekitDir = "./dataset/dataOrekit/"
-savePmlPath = "./save/save_loss/"
-saveDir = "./save/"
-scalerPath ="./save/save_model/Scaler.joblib"
+# dataSGP4Dir = "./dataset/dataSGP4/"
+# dataPOEORBDir = "./dataset/dataPOEORB/"
+# dataOrekitDir = "./dataset/dataOrekit/"
+# savePmlPath = "./save/save_loss/"
+# saveDir = "./save/"
+# scalerPath ="./save/save_model/Scaler.joblib"
 
 def getL2(model):
     l2_reg = 0
@@ -98,13 +98,13 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
     if os.path.exists(savePmlPath+'pml_step.txt'):
         os.remove(savePmlPath + 'pml_step.txt')
     device = torch.device(device)
-    model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
-    model.load_state_dict(torch.load(path_to_save_model+modelName))
+    # model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
+    # model.load_state_dict(torch.load(path_to_save_model+modelName))
 
     criterion = WeightedMSELoss()
     scaler = load(scalerPath)
     test_loss = 0
-    model.eval()
+    # model.eval()
     with torch.no_grad():
         predList = torch.tensor(np.array([])).float().to(device)
         test_bar = tqdm(test_dataloader, total=len(test_dataloader))
@@ -115,28 +115,29 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
             src = orbitData_pre.permute(1, 0, 2)[:, :, :-2].float().to(device)  # torch.Size([288, 4, 5])
             tmp = torch.cat((orbitData_pre.permute(1, 0, 2)[1:,:,:], orbitData_suf.permute(1, 0, 2)), dim=0).float()
             target = tmp.to(device)
-
-            if len(predList) != 0:
-                src[-len(predList):, 0, 0] = predList
-            pred = model(src, device)  # torch.Size([1xw, 1, 1])
-            predList = torch.cat((predList,pred[-1:,0,0]), dim=0)
-            loss = criterion(pred[-1,:,0], target[-1,:,0])
-            # l2_reg = getL2(model)
-            # loss = loss + lambda_l2*l2_reg
-            test_bar.set_postfix({"loss": loss.detach().item()})
-            test_loss += loss.detach().item()
-            pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)
-            pred_error[-len(predList):, 0] = predList.cpu()
-            pred_error = scaler.inverse_transform(pred_error)  # (288,7)
+            #
+            # if len(predList) != 0:
+            #     src[-len(predList):, 0, 0] = predList
+            # pred = model(src, device)  # torch.Size([1xw, 1, 1])
+            # predList = torch.cat((predList,pred[-1:,0,0]), dim=0)
+            # loss = criterion(pred[-1,:,0], target[-1,:,0])
+            # # l2_reg = getL2(model)
+            # # loss = loss + lambda_l2*l2_reg
+            # test_bar.set_postfix({"loss": loss.detach().item()})
+            # test_loss += loss.detach().item()
+            # pred_error = orbitData_pre.permute(1, 0, 2)[-predicting_length:, :, :].squeeze(-2).clone()  # (288,7)
+            # pred_error[-len(predList):, 0] = predList.cpu()
+            # pred_error = scaler.inverse_transform(pred_error)  # (288,7)
             src_error = scaler.inverse_transform(tmp[-predicting_length:, :, :].squeeze(-2))  # (288,7)
-
-            pml = Pml(src_error[:, 0],pred_error[:, 0])
-            with open(savePmlPath+"pml_step.txt", "a") as f:
-                f.write(f"Step{idx+1}: {pml}\n")
+            #
+            # pml = Pml(src_error[:, 0],pred_error[:, 0])
+            # with open(savePmlPath+"pml_step.txt", "a") as f:
+            #     f.write(f"Step{idx+1}: {pml}\n")
 
         test_loss = test_loss/len(test_dataloader)
         print(f"loss_avg: {test_loss}")
-        print(f"Pml: {pml}")
+        # print(f"Pml: {pml}")
+        pred_error = torch.zeros((2880,8))
         plot_error(saveDir,src_error[:,0],pred_error[:,0],"error_step")
 
 if __name__ == "__main__":
@@ -174,5 +175,5 @@ if __name__ == "__main__":
     test_dataset = orbitPDataset(data= orbitData_test, axis= axis, training_length = training_length, forecast_window = forecast_window)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    inference(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
+    # inference(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
     inference_step(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)

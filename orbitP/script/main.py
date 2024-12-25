@@ -60,10 +60,10 @@ def main( epoch: int = 1000,
     orbitData_Orekit = get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir)
     orbitData = orbitData_Orekit
     # 归一化并保存scaler
-    # scaler = MinMaxScaler()
-    # scaler.fit(orbitData[:,:,axis])
-    # orbitData[:,:,axis] = scaler.transform(orbitData[:,:,axis])
-    # joblib.dump(scaler, path_to_save_model +'Scaler.joblib')
+    scaler = MinMaxScaler()
+    scaler.fit(orbitData[:,:,axis])
+    orbitData[:,:,axis] = scaler.transform(orbitData[:,:,axis])
+    joblib.dump(scaler, path_to_save_model +'Scaler.joblib')
     orbitData_train = orbitData[:-predicting_length]
     orbitData_test = orbitData[-predicting_length-predicting_length:]
     print(f"Train: {orbitData_train.shape}")
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--lambda_l2", type=float, default=0.000001)
+    parser.add_argument("--lambda_l2", type=float, default=0.0000001)
     parser.add_argument("--num_layers", type=int, default=5)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--frequency", type=int, default=100)

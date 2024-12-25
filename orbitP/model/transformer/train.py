@@ -23,7 +23,7 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k,num_la
 
     device = torch.device(device)
     model = Transformer(feature_size=feature_size,k=k,num_layers=num_layer,dropout=dropout).float().to(device)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.005)
+    optimizer = torch.optim.Adam(model.parameters(),lr=0.0005)
     criterion = WeightedMSELoss(1)
     model.train()
     for epoch in range(EPOCH):
@@ -39,8 +39,8 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k,num_la
             target = torch.cat((orbitData_pre.permute(1,0,2)[1:,:,:],orbitData_suf.permute(1,0,2)),dim=0).float().to(device)
             pred= model(src, device) # torch.Size([1xw, 1, 1])
             loss = criterion(pred.squeeze(-1),target[:,:,0])
-            # l2_reg = getL2(model)
-            # loss = loss + lambda_l2*l2_reg
+            l2_reg = getL2(model)
+            loss = loss + lambda_l2*l2_reg
             loss.backward()
             optimizer.step()
 

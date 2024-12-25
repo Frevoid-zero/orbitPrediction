@@ -1,21 +1,18 @@
 import argparse
 import os
-import shutil
-import sys
 import numpy as np
 import joblib
-from orbitP.model.transformer.DataLoader import orbitPDataset
-from orbitP.model.transformer.loss import WeightedMSELoss
-from orbitP.model.transformer.model import Transformer
+from orbitP.script.DataLoader import orbitPDataset
+from orbitP.script.loss import WeightedMSELoss
+from orbitP.model.transformer import Transformer
 from torch.utils.data import DataLoader
 import torch
-import torch.nn as nn
 import logging
 from joblib import load
 from tqdm import tqdm
 
-from orbitP.model.transformer.util import Pml
-from orbitP.script.loadData import get_orbitData_SGP4,get_orbitData_Orekit
+from orbitP.script.util import Pml
+from orbitP.script.loadData import get_orbitData_Orekit
 from orbitP.script.plot import plot_error
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s %(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
@@ -26,14 +23,14 @@ axis = 0
 training_length = 2880
 predicting_length = 2880
 forecast_window = 1
-modelName = "train_50.pth"
+modelName = "train_10.pth"
 
-dataSGP4Dir = "../../../dataset/dataSGP4/"
-dataPOEORBDir = "../../../dataset/dataPOEORB/"
-dataOrekitDir = "../../../dataset/dataOrekit/"
-savePmlPath = "../../../save/save_loss/"
-saveDir = "../../../save/"
-scalerPath ="../../../save/save_model/Scaler.joblib"
+dataSGP4Dir = "../../dataset/dataSGP4/"
+dataPOEORBDir = "../../dataset/dataPOEORB/"
+dataOrekitDir = "../../dataset/dataOrekit/"
+savePmlPath = "../../save/save_loss/"
+saveDir = "../../save/"
+scalerPath ="../../save/save_model/Scaler.joblib"
 
 # dataSGP4Dir = "./dataset/dataSGP4/"
 # dataPOEORBDir = "./dataset/dataPOEORB/"
@@ -52,12 +49,12 @@ def inference(test_dataloader, feature_size, k,num_layers,dropout, path_to_save_
     if os.path.exists(savePmlPath+'pml_all.txt'):
         os.remove(savePmlPath + 'pml_all.txt')
     device = torch.device(device)
-    model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
-    model.load_state_dict(torch.load(path_to_save_model+modelName))
+    # model = Transformer(feature_size=feature_size,k=k,num_layers=num_layers,dropout=dropout).float().to(device)
+    # model.load_state_dict(torch.load(path_to_save_model+modelName))
     criterion = WeightedMSELoss()
     scaler = load(scalerPath)
     test_loss = 0
-    model.eval()
+    # model.eval()
     with torch.no_grad():
         predList = torch.tensor(np.array([]))
         test_bar = tqdm(test_dataloader, total=len(test_dataloader),position=0 ,leave=True)
@@ -134,8 +131,8 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
             # with open(savePmlPath+"pml_step.txt", "a") as f:
             #     f.write(f"Step{idx+1}: {pml}\n")
 
-        test_loss = test_loss/len(test_dataloader)
-        print(f"loss_avg: {test_loss}")
+        # test_loss = test_loss/len(test_dataloader)
+        # print(f"loss_avg: {test_loss}")
         # print(f"Pml: {pml}")
         pred_error = torch.zeros((2880,8))
         plot_error(saveDir,src_error[:,0],pred_error[:,0],"error_step")
@@ -146,7 +143,7 @@ if __name__ == "__main__":
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
-    parser.add_argument("--num_layers", type=int, default=5)
+    parser.add_argument("--num_layers", type=int, default=3)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)
     parser.add_argument("--path_to_save_model",type=str,default=saveDir+"save_model/")

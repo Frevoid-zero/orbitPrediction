@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import sys
 
 import joblib
 import torch
@@ -25,15 +26,15 @@ training_length = 1440
 predicting_length = 1440
 forecast_window = 1
 
-# dataSGP4Dir = "../../dataset/dataSGP4/"
-# dataPOEORBDir = "../../dataset/dataPOEORB/"
-# dataOrekitDir = "../../dataset/dataOrekit/"
-# saveDir = "../../save/"
+dataSGP4Dir = "../../dataset/dataSGP4/"
+dataPOEORBDir = "../../dataset/dataPOEORB/"
+dataOrekitDir = "../../dataset/dataOrekit/"
+saveDir = "../../save/"
 
-dataSGP4Dir = "./dataset/dataSGP4/"
-dataPOEORBDir = "./dataset/dataPOEORB/"
-dataOrekitDir = "./dataset/dataOrekit/"
-saveDir = "./save/"
+# dataSGP4Dir = "./dataset/dataSGP4/"
+# dataPOEORBDir = "./dataset/dataPOEORB/"
+# dataOrekitDir = "./dataset/dataOrekit/"
+# saveDir = "./save/"
 
 def main( epoch: int = 1000,
     k: int = 3,
@@ -57,7 +58,7 @@ def main( epoch: int = 1000,
     orbitData_Orekit = get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir)
     orbitData = orbitData_Orekit
     # 归一化并保存scaler
-    scaler = MinMaxScaler(feature_range=(-1,1))
+    scaler = MinMaxScaler(feature_range=(-1,1))#按列归一化，所以第二维必须表示特征
     scaler.fit(orbitData[:,:,axis])
     orbitData[:,:,axis] = scaler.transform(orbitData[:,:,axis])
     joblib.dump(scaler, path_to_save_model +'Scaler.joblib')
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--batch_size", type=int, default=6)
-    parser.add_argument("--hidden_dim", type=int, default=512)
+    parser.add_argument("--hidden_dim", type=int, default=256)
     parser.add_argument("--lambda_l2", type=float, default=0.0000001)
     parser.add_argument("--num_layers", type=int, default=2)
     parser.add_argument("--dropout", type=float, default=0.2)

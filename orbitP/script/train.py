@@ -87,11 +87,11 @@ def transformer(train_dataloader, test_dataloader, EPOCH, feature_size, k,num_la
     return model
 
 
-def lstm(train_dataloader, test_dataloader, EPOCH, feature_size,num_layer,hidden_dim,dropout, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
+def lstm(train_dataloader, test_dataloader, EPOCH, feature_size,num_layers,hidden_dim,dropout, path_to_save_model, path_to_save_loss, path_to_save_predictions, device, lambda_l2 = 0.0001):
 
     device = torch.device(device)
-    model = Lstm(input_dim=feature_size,num_layers=num_layer,hidden_dim=hidden_dim,dropout=dropout,output_dim=1).float().to(device)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.001)
+    model = Lstm(input_dim=feature_size,num_layers=num_layers,hidden_dim=hidden_dim,dropout=dropout,output_dim=1).float().to(device)
+    optimizer = torch.optim.Adam(model.parameters(),lr=0.005)
     criterion = WeightedMSELoss(1)
     model.train()
     for epoch in range(EPOCH):

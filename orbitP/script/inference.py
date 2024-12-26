@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 torch.manual_seed(0)
 
 axis = 0
-training_length = 1440
-predicting_length = 1440
+training_length = 720
+predicting_length = 720
 forecast_window = 1
-modelName = "train_10.pth"
+modelName = "train_5.pth"
 
 dataSGP4Dir = "../../dataset/dataSGP4/"
 dataPOEORBDir = "../../dataset/dataPOEORB/"

@@ -108,8 +108,8 @@ def lstm(train_dataloader, test_dataloader, EPOCH, feature_size,num_layers,hidde
 
             pred = model(src,device) # torch.Size([1xw, 1, 1])
             loss = criterion(pred,target)
-            # l2_reg = getL2(model)
-            # loss = loss + lambda_l2*l2_reg
+            l2_reg = getL2(model)
+            loss = loss + lambda_l2*l2_reg
             loss.backward()
             optimizer.step()
 

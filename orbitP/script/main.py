@@ -22,8 +22,8 @@ print('torch.cuda.is_available=' + str(torch.cuda.is_available()))
 torch.set_default_tensor_type(torch.FloatTensor)
 
 axis = 0
-training_length = 1440
-predicting_length = 1440
+training_length = 720
+predicting_length = 720
 forecast_window = 1
 
 dataSGP4Dir = "../../dataset/dataSGP4/"
@@ -80,9 +80,9 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--feature_size", type=int, default=6)
     parser.add_argument("--batch_size", type=int, default=6)
-    parser.add_argument("--hidden_dim", type=int, default=256)
-    parser.add_argument("--lambda_l2", type=float, default=0.0000001)
-    parser.add_argument("--num_layers", type=int, default=2)
+    parser.add_argument("--hidden_dim", type=int, default=512)
+    parser.add_argument("--lambda_l2", type=float, default=0.000001)
+    parser.add_argument("--num_layers", type=int, default=3)
     parser.add_argument("--dropout", type=float, default=0.2)
     parser.add_argument("--frequency", type=int, default=100)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)

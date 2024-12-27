@@ -94,6 +94,36 @@ def get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir):
     orbitData = np.array(orbitData)
     return orbitData
 
+def get_orbitData_Orekit_stlm(dataOrekitDir,dataPOEORBDir):
+    orbitData = []
+    filesOrekitPath = get_file_paths(dataOrekitDir)
+    t_bar = tqdm(filesOrekitPath, total=len(filesOrekitPath))
+    for fileOrekitPath in t_bar:
+        fileName = os.path.basename(fileOrekitPath).replace(".txt", "")
+        fileDate = datetime.strptime(fileName, "%Y-%m-%d")
+        t_bar.set_description(fileName)
+        filePOEORBPath = dataPOEORBDir + os.path.basename(fileOrekitPath)
+
+        with open(fileOrekitPath, "r", encoding="utf-8") as fileOrekit:
+            with open(filePOEORBPath, "r", encoding="utf-8") as filePOEORB:
+                linesOrekit = fileOrekit.readlines()
+                linesPOEORB = filePOEORB.readlines()
+                j = 0
+                for i in range(0, len(linesPOEORB), 3):
+                    time_utc = datetime.strptime(linesPOEORB[i].strip(), "UTC=%Y-%m-%dT%H:%M:%S.%f")
+                    p_POEORB = linesPOEORB[i + 1].strip().split(" ")
+                    v_POEORB = linesPOEORB[i + 2].strip().split(" ")
+                    p_Orekit = linesOrekit[j + 1].strip().split(" ")
+                    v_Orekit = linesOrekit[j + 2].strip().split(" ")
+                    a_Orekit = linesOrekit[j + 3].strip().split(" ")
+                    p_error = [float(x) - float(y) for x, y in zip(p_POEORB, p_Orekit)]
+                    v_error = [float(x) - float(y) for x, y in zip(v_POEORB, v_Orekit)]
+                    # orbitData.append([p_error, v_error, p_SGP4, v_SGP4, [month]*3, [day]*3, [seconds]*3, p_POEORB, v_POEORB])
+                    orbitData.append([p_error, [float(x) for x in v_Orekit], [float(x) for x in a_Orekit]])
+                    j+=4
+
+    orbitData = np.array(orbitData)
+    return orbitData
 
 if __name__ == "__main__":
     # orbitData_SGP4 = get_orbitData_SGP4(dataSGP4Dir,dataPOEORBDir)

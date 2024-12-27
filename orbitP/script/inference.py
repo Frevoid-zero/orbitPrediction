@@ -15,7 +15,7 @@ from joblib import load
 from tqdm import tqdm
 
 from orbitP.script.util import Pml
-from orbitP.script.loadData import get_orbitData_Orekit
+from orbitP.script.loadData import get_orbitData_Orekit,get_orbitData_Orekit_stlm
 from orbitP.script.plot import plot_error
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s %(message)s", datefmt="[%Y-%m-%d %H:%M:%S]")
@@ -26,21 +26,21 @@ axis = 0
 training_length = 720
 predicting_length = 720
 forecast_window = 1
-modelName = "train_5.pth"
+modelName = "train_10.pth"
 
-dataSGP4Dir = "../../dataset/dataSGP4/"
-dataPOEORBDir = "../../dataset/dataPOEORB/"
-dataOrekitDir = "../../dataset/dataOrekit/"
-savePmlPath = "../../save/save_loss/"
-saveDir = "../../save/"
-scalerPath ="../../save/save_model/Scaler.joblib"
+# dataSGP4Dir = "../../dataset/dataSGP4/"
+# dataPOEORBDir = "../../dataset/dataPOEORB/"
+# dataOrekitDir = "../../dataset/dataOrekit/"
+# savePmlPath = "../../save/save_loss/"
+# saveDir = "../../save/"
+# scalerPath ="../../save/save_model/Scaler.joblib"
 
-# dataSGP4Dir = "./dataset/dataSGP4/"
-# dataPOEORBDir = "./dataset/dataPOEORB/"
-# dataOrekitDir = "./dataset/dataOrekit/"
-# savePmlPath = "./save/save_loss/"
-# saveDir = "./save/"
-# scalerPath ="./save/save_model/Scaler.joblib"
+dataSGP4Dir = "./dataset/dataSGP4/"
+dataPOEORBDir = "./dataset/dataPOEORB/"
+dataOrekitDir = "./dataset/dataOrekit/"
+savePmlPath = "./save/save_loss/"
+saveDir = "./save/"
+scalerPath ="./save/save_model/Scaler.joblib"
 
 def getL2(model):
     l2_reg = 0
@@ -139,6 +139,7 @@ def inference_step(test_dataloader, feature_size, k,num_layers,dropout, path_to_
         # print(f"Pml: {pml}")
         pred_error = torch.zeros((2880,8))
         plot_error(saveDir,src_error[:,0],pred_error[:,0],"error_step")
+
 def inference_lstm(test_dataloader, feature_size,num_layers,hidden_dim,dropout, path_to_save_model, scalerPath, modelName, device,orbitData=None,lambda_l2 = 0.0001):
     if os.path.exists(savePmlPath+'pml_lstm.txt'):
         os.remove(savePmlPath + 'pml_lstm.txt')
@@ -157,7 +158,7 @@ def inference_lstm(test_dataloader, feature_size,num_layers,hidden_dim,dropout, 
             # Shape of _input : [batch, input_length, feature]
             # Desired input for model: [input_length, batch, feature]
             test_bar.set_description(f"inference")
-            src = orbitData_pre[:, :, :-2].float().to(device)  # torch.Size([4, 288, 6])
+            src = orbitData_pre.float().to(device)  # torch.Size([4, 288, 6])
             target = orbitData_suf[:,:,0].float().to(device)
 
             if len(predList) != 0:
@@ -179,14 +180,53 @@ def inference_lstm(test_dataloader, feature_size,num_layers,hidden_dim,dropout, 
         print(f"Pml: {pml}")
         plot_error(saveDir,src_error[-len(predList):,0],pred_error[-len(predList):,0],"error_lstm")
 
+def inference_lstm_step(test_dataloader, feature_size,num_layers,hidden_dim,dropout, path_to_save_model, scalerPath, modelName, device,orbitData=None,lambda_l2 = 0.0001):
+    if os.path.exists(savePmlPath+'pml_lstm_step.txt'):
+        os.remove(savePmlPath + 'pml_lstm_step.txt')
+    device = torch.device(device)
+    model = Lstm(input_dim=feature_size, num_layers=num_layers, hidden_dim=hidden_dim, dropout=dropout,
+                 output_dim=1).float().to(device)
+    model.load_state_dict(torch.load(path_to_save_model+modelName))
+    criterion = WeightedMSELoss()
+    scaler = load(scalerPath)
+    test_loss = 0
+    model.eval()
+    with torch.no_grad():
+        predList = torch.tensor(np.array([])).float().to(device)
+        test_bar = tqdm(test_dataloader, total=len(test_dataloader))
+        for idx, (idx_pre, idx_suf, orbitData_pre, orbitData_suf, training_length, forecast_window) in enumerate(tqdm(test_bar)):
+            # Shape of _input : [batch, input_length, feature]
+            # Desired input for model: [input_length, batch, feature]
+            test_bar.set_description(f"inference")
+            src = orbitData_pre.float().to(device)  # torch.Size([4, 288, 6])
+            target = orbitData_suf[:,:,0].float().to(device)
+            pred = model(src, device)  # torch.Size([1, 1])
+            predList = torch.cat((predList,pred), dim=0)
+            loss = criterion(pred, target)
+            # print(f"{pred} {target}")
+            # l2_reg = getL2(model)
+            # loss = loss + lambda_l2*l2_reg
+            test_bar.set_postfix({"loss": loss.detach().item()})
+            test_loss += loss.detach().item()
+
+        test_loss = test_loss/len(test_dataloader)
+        print(f"loss_avg: {test_loss}")
+        src_error = scaler.inverse_transform(orbitData)
+        orbitData[-len(predList):,0]=predList[:,0].cpu()
+        pred_error = scaler.inverse_transform(orbitData) #原始是0反归一化后不一定是
+        pml = Pml(src_error[-len(predList):, 0], pred_error[-len(predList):, 0])
+        print(f"Pml: {pml}")
+        plot_error(saveDir,src_error[-len(predList):,0],pred_error[-len(predList):,0],"error_lstm_step")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--k", type=int, default=3)
-    parser.add_argument("--feature_size", type=int, default=6)
+    parser.add_argument("--feature_size", type=int, default=3)
     parser.add_argument("--frequency", type=int, default=100)
-    parser.add_argument("--hidden_dim", type=int, default=16)
+    parser.add_argument("--hidden_dim", type=int, default=128)
     parser.add_argument("--lambda_l2", type=float, default=0.000001)
-    parser.add_argument("--num_layers", type=int, default=2)
+    parser.add_argument("--num_layers", type=int, default=3)
     parser.add_argument("--dropout", type=float, default=0.2)
     parser.add_argument("--path_to_save_dir", type=str, default=saveDir)
     parser.add_argument("--path_to_save_model",type=str,default=saveDir+"save_model/")
@@ -203,10 +243,9 @@ if __name__ == "__main__":
     # 加载scaler
     scaler = joblib.load(scalerPath)
     # orbitData_SGP4 = get_orbitData_SGP4(dataSGP4Dir,dataPOEORBDir)
-    orbitData_Orekit = get_orbitData_Orekit(dataOrekitDir,dataPOEORBDir)
+    orbitData_Orekit = get_orbitData_Orekit_stlm(dataOrekitDir,dataPOEORBDir)
     orbitData = orbitData_Orekit
     orbitData = np.array(orbitData)
-
 
     orbitData[:, :, axis] = scaler.transform(orbitData[:, :, axis])
     orbitData_train = orbitData[:-predicting_length]
@@ -219,3 +258,6 @@ if __name__ == "__main__":
     # inference_step(test_dataloader,args.feature_size,args.k,args.num_layers,args.dropout,args.path_to_save_model,scalerPath,modelName,device,lambda_l2=args.lambda_l2)
     inference_lstm(test_dataloader, args.feature_size, args.num_layers, args.hidden_dim, args.dropout, args.path_to_save_model, scalerPath,
                    modelName, device,orbitData=orbitData[:, :, axis],lambda_l2=args.lambda_l2)
+
+    # inference_lstm_step(test_dataloader, args.feature_size, args.num_layers, args.hidden_dim, args.dropout, args.path_to_save_model, scalerPath,
+    #                modelName, device,orbitData=orbitData[:, :, axis],lambda_l2=args.lambda_l2)

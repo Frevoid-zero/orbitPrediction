@@ -21,7 +21,10 @@ class orbitPDataset(Dataset):
 
     def __len__(self):
         # 可用窗口的总数
-        return len(self.data) - self.T - self.S + 1
+        if self.S ==1:
+            return len(self.data) - self.T - self.S + 1
+        else:
+            return len(self.data) - self.T -self.S
 
     # Will pull an index between 0 and __len__. 
     def __getitem__(self, idx):

@@ -36,6 +36,9 @@ def clean_directory(path_to_save_dir):
         shutil.rmtree(path_to_save_dir+'save_model')
     if os.path.exists(path_to_save_dir+'save_predictions'):
         shutil.rmtree(path_to_save_dir+'save_predictions')
+    if os.path.exists(path_to_save_dir + 'load_model'):
+        shutil.rmtree(path_to_save_dir + 'load_model')
+
     if not os.path.exists(path_to_save_dir):
         os.mkdir(path_to_save_dir)
     if not os.path.exists(path_to_save_dir+"save_loss"):
@@ -44,3 +47,6 @@ def clean_directory(path_to_save_dir):
         os.mkdir(path_to_save_dir+"save_model")
     if not os.path.exists(path_to_save_dir+"save_predictions"):
         os.mkdir(path_to_save_dir+"save_predictions")
+    if not os.path.exists(path_to_save_dir+"load_model"):
+        os.mkdir(path_to_save_dir+"load_model")
+

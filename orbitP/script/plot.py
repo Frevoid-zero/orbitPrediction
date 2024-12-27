@@ -26,7 +26,7 @@ def plot_pml(path_to_save):
     plt.rcParams.update({'font.size': 10})
     with open(path_to_save+"save_loss/"+"train_loss.txt", 'r') as f:
         pml_list = [float(line.strip().split(": ")[1]) for line in f.readlines()]
-    x = [i for i in range(1,len(pml_list)+1)]
+    x = [i*2 for i in range(1,len(pml_list)+1)]
     title = "Pml rate"
     plt.plot(x, pml_list, label = "loss")
     plt.xlabel("t/min")
@@ -47,7 +47,7 @@ def plot_error(path_to_save, src, tgt, title):
     # prediction = np.append(src[-1], prediction.flatten())
 
     # plotting
-    x = [i for i in range(1, len(src)+1)]
+    x = [i*2 for i in range(1, len(src)+1)]
     plt.plot(x, src, '-', color = 'red', label = 'True Error', alpha=0.8)
     plt.plot(x, tgt, '-', color = 'blue', label = 'Prediction Error', alpha=0.8)
 
